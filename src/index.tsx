@@ -1,12 +1,4 @@
-import { NativeModules } from 'react-native';
-
-// interface OrientationModuleInterface {
-//   getCurrentOrientation(): string;
-//   lockToLandscape(): void;
-//   lockToPortrait(): void;
-//   activateListener(cb: (orientation: number) => void): void;
-//   install(): void;
-// }
+import { NativeModules, Platform } from 'react-native';
 
 declare global {
   var getCurrentOrientation: () => string;
@@ -23,6 +15,14 @@ if (OrientationNativeModule) {
   }
 }
 
+function noop() {
+  if (__DEV__) {
+    console.warn(
+      'react-native-jsi-orientation-locker is not available on this platform'
+    );
+  }
+}
+
 export const getCurrentOrientation = (): string => {
   return global.getCurrentOrientation();
 };
@@ -36,15 +36,24 @@ export const lockToPortrait = (): void => {
 export const listenToOrientationChanges = (
   cb: (orientation: number) => void
 ): void => {
-  console.log('LISTEN!');
   return global.activateListener(cb);
 };
 
-const orientationModule = {
+const orientationModuleAndroid = {
   getCurrentOrientation,
   lockToLandscape,
   lockToPortrait,
   listenToOrientationChanges,
 };
 
-export default orientationModule;
+const orientationModuleiOS = {
+  getCurrentOrientation: noop as () => string,
+  lockToLandscape: noop,
+  lockToPortrait: noop,
+  listenToOrientationChanges: noop,
+};
+
+export default Platform.select({
+  android: orientationModuleAndroid,
+  ios: orientationModuleiOS,
+});
