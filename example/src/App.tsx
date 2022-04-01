@@ -1,11 +1,11 @@
 import * as React from 'react';
-import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
+import {StyleSheet, View, Text, TouchableOpacity} from 'react-native';
 import Orientation from 'react-native-jsi-orientation-locker';
 
 export default function App() {
-  const [orientation, setOrientation] = React.useState();
+  const [orientation, setOrientation] = React.useState<string>('');
   const [currentOrientation, setCurrentOrientation] = React.useState(() =>
-    Orientation.getCurrentOrientation()
+    Orientation.getCurrentOrientation(),
   );
 
   const unregister1 = React.useRef();
@@ -13,13 +13,13 @@ export default function App() {
 
   React.useEffect(() => {
     unregister1.current = Orientation.listenToOrientationChanges(
-      (orientation) => {
-        console.log({ first: orientation });
+      orientation => {
+        console.log({first: orientation});
         setCurrentOrientation(orientation);
-      }
+      },
     );
-    unregister2.current = Orientation.listenToOrientationChanges((res) => {
-      console.log({ second: res });
+    unregister2.current = Orientation.listenToOrientationChanges(res => {
+      console.log({second: res});
     });
   }, []);
 
@@ -31,8 +31,7 @@ export default function App() {
           let value = Orientation.getCurrentOrientation();
           setOrientation(value);
         }}
-        style={styles.button}
-      >
+        style={styles.button}>
         <Text style={styles.buttonTxt}>Orientation: {orientation}</Text>
       </TouchableOpacity>
 
@@ -40,34 +39,54 @@ export default function App() {
         onPress={() => {
           Orientation.lockToPortrait();
         }}
-        style={styles.button}
-      >
+        style={styles.button}>
         <Text style={styles.buttonTxt}>Lock Portrait</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        onPress={() => {
+          Orientation.lockToPortraitUpsideDown();
+        }}
+        style={styles.button}>
+        <Text style={styles.buttonTxt}>Lock PortraitUpsideDown</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
         onPress={() => {
           Orientation.lockToLandscape();
         }}
-        style={styles.button}
-      >
+        style={styles.button}>
         <Text style={styles.buttonTxt}>Lock Landscape</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        onPress={() => {
+          Orientation.lockToLandscapeLeft();
+        }}
+        style={styles.button}>
+        <Text style={styles.buttonTxt}>Lock Landscape Left</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        onPress={() => {
+          Orientation.lockToLandscapeRight();
+        }}
+        style={styles.button}>
+        <Text style={styles.buttonTxt}>Lock Landscape Right</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
         onPress={() => {
           unregister1.current();
         }}
-        style={styles.button}
-      >
+        style={styles.button}>
         <Text style={styles.buttonTxt}>Unregister Listener 1</Text>
       </TouchableOpacity>
       <TouchableOpacity
         onPress={() => {
           unregister2.current();
         }}
-        style={styles.button}
-      >
+        style={styles.button}>
         <Text style={styles.buttonTxt}>Unregister Listener 2.</Text>
       </TouchableOpacity>
     </View>

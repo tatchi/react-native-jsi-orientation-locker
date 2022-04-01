@@ -201,6 +201,52 @@ void install(facebook::jsi::Runtime &jsiRuntime, std::shared_ptr<react::CallInvo
 
     jsiRuntime.global().setProperty(jsiRuntime, "lockToLandscape", move(lockToLandscape));
 
+    auto lockToLandscapeLeft = Function::createFromHostFunction(jsiRuntime,
+                                                          PropNameID::forAscii(jsiRuntime,
+                                                                               "lockToLandscapeLeft"),
+                                                          0,
+                                                          [](Runtime &runtime,
+                                                             const Value &thisValue,
+                                                             const Value *arguments,
+                                                             size_t count) -> Value {
+
+                                                              JNIEnv *jniEnv = GetJniEnv();
+
+                                                              java_class = jniEnv->GetObjectClass(
+                                                                      java_object);
+                                                              jmethodID lockToLandscapeLeft = jniEnv->GetMethodID(
+                                                                      java_class, "lockToLandscapeLeft",
+                                                                      "()V");
+                                                              jniEnv->CallVoidMethod(
+                                                                      java_object, lockToLandscapeLeft);
+                                                              return Value::undefined();
+                                                          });
+
+    jsiRuntime.global().setProperty(jsiRuntime, "lockToLandscapeLeft", move(lockToLandscapeLeft));
+
+    auto lockToLandscapeRight = Function::createFromHostFunction(jsiRuntime,
+                                                          PropNameID::forAscii(jsiRuntime,
+                                                                               "lockToLandscapeRight"),
+                                                          0,
+                                                          [](Runtime &runtime,
+                                                             const Value &thisValue,
+                                                             const Value *arguments,
+                                                             size_t count) -> Value {
+
+                                                              JNIEnv *jniEnv = GetJniEnv();
+
+                                                              java_class = jniEnv->GetObjectClass(
+                                                                      java_object);
+                                                              jmethodID lockToLandscapeRight = jniEnv->GetMethodID(
+                                                                      java_class, "lockToLandscapeRight",
+                                                                      "()V");
+                                                              jniEnv->CallVoidMethod(
+                                                                      java_object, lockToLandscapeRight);
+                                                              return Value::undefined();
+                                                          });
+
+    jsiRuntime.global().setProperty(jsiRuntime, "lockToLandscapeRight", move(lockToLandscapeRight));
+
     auto lockToPortrait = Function::createFromHostFunction(jsiRuntime,
                                                           PropNameID::forAscii(jsiRuntime,
                                                                                "lockToPortrait"),
@@ -223,6 +269,29 @@ void install(facebook::jsi::Runtime &jsiRuntime, std::shared_ptr<react::CallInvo
                                                           });
 
     jsiRuntime.global().setProperty(jsiRuntime, "lockToPortrait", move(lockToPortrait));
+    
+    auto lockToPortraitUpsideDown = Function::createFromHostFunction(jsiRuntime,
+                                                          PropNameID::forAscii(jsiRuntime,
+                                                                               "lockToPortraitUpsideDown"),
+                                                          0,
+                                                          [](Runtime &runtime,
+                                                             const Value &thisValue,
+                                                             const Value *arguments,
+                                                             size_t count) -> Value {
+
+                                                              JNIEnv *jniEnv = GetJniEnv();
+
+                                                              java_class = jniEnv->GetObjectClass(
+                                                                      java_object);
+                                                              jmethodID lockToPortraitUpsideDown = jniEnv->GetMethodID(
+                                                                      java_class, "lockToPortraitUpsideDown",
+                                                                      "()V");
+                                                              jniEnv->CallVoidMethod(
+                                                                      java_object, lockToPortraitUpsideDown);
+                                                              return Value();
+                                                          });
+
+    jsiRuntime.global().setProperty(jsiRuntime, "lockToPortraitUpsideDown", move(lockToPortraitUpsideDown));
 
     auto activateListener = Function::createFromHostFunction(jsiRuntime,
                                                           PropNameID::forAscii(jsiRuntime,

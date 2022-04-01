@@ -113,9 +113,27 @@ public class JsiOrientationLockerModule extends ReactContextBaseJavaModule {
     activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
   }
 
+  public void lockToLandscapeLeft() {
+    final Activity activity = getCurrentActivity();
+    if (activity == null) return;
+    activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+  }
+
+  public void lockToLandscapeRight() {
+    final Activity activity = getCurrentActivity();
+    if (activity == null) return;
+    activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE);
+  }
+
   public void lockToPortrait() {
     final Activity activity = getCurrentActivity();
     if (activity == null) return;
     activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+  }
+
+  public void lockToPortraitUpsideDown() {
+    final Activity activity = getCurrentActivity();
+    if (activity == null) return;
+    activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT);
   }
 }
