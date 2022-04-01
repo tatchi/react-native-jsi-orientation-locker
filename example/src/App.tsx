@@ -8,8 +8,8 @@ export default function App() {
     Orientation.getCurrentOrientation(),
   );
 
-  const unregister1 = React.useRef();
-  const unregister2 = React.useRef();
+  const unregister1 = React.useRef<() => void>();
+  const unregister2 = React.useRef<() => void>();
 
   React.useEffect(() => {
     unregister1.current = Orientation.listenToOrientationChanges(
@@ -77,14 +77,18 @@ export default function App() {
 
       <TouchableOpacity
         onPress={() => {
-          unregister1.current();
+          if (unregister1.current) {
+            unregister1.current();
+          }
         }}
         style={styles.button}>
         <Text style={styles.buttonTxt}>Unregister Listener 1</Text>
       </TouchableOpacity>
       <TouchableOpacity
         onPress={() => {
-          unregister2.current();
+          if (unregister2.current) {
+            unregister2.current();
+          }
         }}
         style={styles.button}>
         <Text style={styles.buttonTxt}>Unregister Listener 2.</Text>
