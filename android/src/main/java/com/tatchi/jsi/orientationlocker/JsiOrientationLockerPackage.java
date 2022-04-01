@@ -1,4 +1,4 @@
-package com.reactnativejsiorientationlocker;
+package com.tatchi.jsi.orientationlocker;
 
 import androidx.annotation.NonNull;
 
