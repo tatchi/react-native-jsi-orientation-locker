@@ -18,15 +18,14 @@ JavaVM *java_vm;
 jclass java_class;
 jobject java_object;
 
-
-
 /**
  * A simple callback function that allows us to detach current JNI Environment
  * when the thread
  * See https://stackoverflow.com/a/30026231 for detailed explanation
  */
 
-void DeferThreadDetach(JNIEnv *env) {
+void DeferThreadDetach(JNIEnv *env)
+{
     static pthread_key_t thread_key;
 
     // Set up a Thread Specific Data key, and a callback that
@@ -34,13 +33,15 @@ void DeferThreadDetach(JNIEnv *env) {
     // This is only done once, across all threads, and the value
     // associated with the key for any given thread will initially
     // be NULL.
-    static auto run_once = [] {
-        const auto err = pthread_key_create(&thread_key, [](void *ts_env) {
+    static auto run_once = []
+    {
+        const auto err = pthread_key_create(&thread_key, [](void *ts_env)
+                                            {
             if (ts_env) {
                 java_vm->DetachCurrentThread();
-            }
-        });
-        if (err) {
+            } });
+        if (err)
+        {
             // Failed to create TSD key. Throw an exception if you want to.
         }
         return 0;
@@ -50,8 +51,10 @@ void DeferThreadDetach(JNIEnv *env) {
     // we need to associate a non-NULL value with the key on that thread.
     // We can use the JNIEnv* as that value.
     const auto ts_env = pthread_getspecific(thread_key);
-    if (!ts_env) {
-        if (pthread_setspecific(thread_key, env)) {
+    if (!ts_env)
+    {
+        if (pthread_setspecific(thread_key, env))
+        {
             // Failed to set thread-specific value for key. Throw an exception if you want to.
         }
     }
@@ -66,61 +69,67 @@ void DeferThreadDetach(JNIEnv *env) {
  *
  * See https://stackoverflow.com/a/30026231 for detailed explanation
  */
-JNIEnv *GetJniEnv() {
+JNIEnv *GetJniEnv()
+{
     JNIEnv *env = nullptr;
     // We still call GetEnv first to detect if the thread already
     // is attached. This is done to avoid setting up a DetachCurrentThread
     // call on a Java thread.
 
     // g_vm is a global.
-    auto get_env_result = java_vm->GetEnv((void **) &env, JNI_VERSION_1_6);
-    if (get_env_result == JNI_EDETACHED) {
-        if (java_vm->AttachCurrentThread(&env, NULL) == JNI_OK) {
+    auto get_env_result = java_vm->GetEnv((void **)&env, JNI_VERSION_1_6);
+    if (get_env_result == JNI_EDETACHED)
+    {
+        if (java_vm->AttachCurrentThread(&env, NULL) == JNI_OK)
+        {
             DeferThreadDetach(env);
-        } else {
+        }
+        else
+        {
             // Failed to attach thread. Throw an exception if you want to.
         }
-    } else if (get_env_result == JNI_EVERSION) {
+    }
+    else if (get_env_result == JNI_EVERSION)
+    {
         // Unsupported JNI version. Throw an exception if you want to.
     }
     return env;
 }
 
-
-static jstring string2jstring(JNIEnv *env, const string &str) {
+static jstring string2jstring(JNIEnv *env, const string &str)
+{
     return (*env).NewStringUTF(str.c_str());
 }
 
-std::vector<std::shared_ptr<facebook::jsi::Function>> jsCallbacks;
+std::vector<std::shared_ptr<facebook::jsi::Function> > jsCallbacks;
 std::shared_ptr<react::CallInvoker> invoker;
 
 jsi::Runtime *rt;
 
 extern "C" JNIEXPORT int JNICALL
-Java_com_tatchi_jsi_orientationlocker_JsiOrientationLockerModule_callValue(JNIEnv *env, jclass clazz, jint param) {
+Java_com_tatchi_jsi_orientationlocker_JsiOrientationLockerModule_callValue(JNIEnv *env, jclass clazz, jint param)
+{
 
     __android_log_write(ANDROID_LOG_INFO, "COCO TAG", "callValue got called in C++");
 
-        invoker->invokeAsync([=](){
+    invoker->invokeAsync([=]()
+                         {
             __android_log_print(ANDROID_LOG_INFO, "COCO TAG", "in invoke async, nb: %d", jsCallbacks.size());
             for(auto & elem : jsCallbacks)
             {
                 elem->call(*rt, jsi::Value(param));
-            }
-        });
-
+            } });
 
     int result = param + 10;
     return result;
 }
 
-
-
-void install(facebook::jsi::Runtime &jsiRuntime, std::shared_ptr<react::CallInvoker> jsCallInvoker){
-//  docPathStr = std::string(docPath);
-//   auto pool = std::make_shared<ThreadPool>();
-  invoker = jsCallInvoker;
-  rt = &jsiRuntime;
+void install(facebook::jsi::Runtime &jsiRuntime, std::shared_ptr<react::CallInvoker> jsCallInvoker)
+{
+    //  docPathStr = std::string(docPath);
+    //   auto pool = std::make_shared<ThreadPool>();
+    invoker = jsCallInvoker;
+    rt = &jsiRuntime;
 
     auto getDeviceName = Function::createFromHostFunction(jsiRuntime,
                                                           PropNameID::forAscii(jsiRuntime,
@@ -129,216 +138,215 @@ void install(facebook::jsi::Runtime &jsiRuntime, std::shared_ptr<react::CallInvo
                                                           [](Runtime &runtime,
                                                              const Value &thisValue,
                                                              const Value *arguments,
-                                                             size_t count) -> Value {
-
+                                                             size_t count) -> Value
+                                                          {
                                                               JNIEnv *jniEnv = GetJniEnv();
 
                                                               java_class = jniEnv->GetObjectClass(
-                                                                      java_object);
+                                                                  java_object);
                                                               jmethodID getModel = jniEnv->GetMethodID(
-                                                                      java_class, "getModel",
-                                                                      "()Ljava/lang/String;");
+                                                                  java_class, "getModel",
+                                                                  "()Ljava/lang/String;");
                                                               jobject result = jniEnv->CallObjectMethod(
-                                                                      java_object, getModel);
+                                                                  java_object, getModel);
                                                               const char *str = jniEnv->GetStringUTFChars(
-                                                                      (jstring) result, NULL);
+                                                                  (jstring)result, NULL);
 
                                                               return Value(runtime,
                                                                            String::createFromUtf8(
-                                                                                   runtime, str));
+                                                                               runtime, str));
                                                           });
 
     jsiRuntime.global().setProperty(jsiRuntime, "getDeviceName", move(getDeviceName));
 
     auto getCurrentOrientation = Function::createFromHostFunction(jsiRuntime,
-                                                          PropNameID::forAscii(jsiRuntime,
-                                                                               "getCurrentOrientation"),
-                                                          0,
-                                                          [](Runtime &runtime,
-                                                             const Value &thisValue,
-                                                             const Value *arguments,
-                                                             size_t count) -> Value {
+                                                                  PropNameID::forAscii(jsiRuntime,
+                                                                                       "getCurrentOrientation"),
+                                                                  0,
+                                                                  [](Runtime &runtime,
+                                                                     const Value &thisValue,
+                                                                     const Value *arguments,
+                                                                     size_t count) -> Value
+                                                                  {
+                                                                      JNIEnv *jniEnv = GetJniEnv();
 
-                                                              JNIEnv *jniEnv = GetJniEnv();
+                                                                      java_class = jniEnv->GetObjectClass(
+                                                                          java_object);
+                                                                      jmethodID getCurrentOrientation = jniEnv->GetMethodID(
+                                                                          java_class, "getCurrentOrientation",
+                                                                          "()Ljava/lang/String;");
+                                                                      jobject result = jniEnv->CallObjectMethod(
+                                                                          java_object, getCurrentOrientation);
+                                                                      const char *str = jniEnv->GetStringUTFChars(
+                                                                          (jstring)result, NULL);
 
-                                                              java_class = jniEnv->GetObjectClass(
-                                                                      java_object);
-                                                              jmethodID getCurrentOrientation = jniEnv->GetMethodID(
-                                                                      java_class, "getCurrentOrientation",
-                                                                      "()Ljava/lang/String;");
-                                                              jobject result = jniEnv->CallObjectMethod(
-                                                                      java_object, getCurrentOrientation);
-                                                              const char *str = jniEnv->GetStringUTFChars(
-                                                                      (jstring) result, NULL);
-
-                                                              return Value(runtime,
-                                                                           String::createFromUtf8(
-                                                                                   runtime, str));
-                                                          });
+                                                                      return Value(runtime,
+                                                                                   String::createFromUtf8(
+                                                                                       runtime, str));
+                                                                  });
 
     jsiRuntime.global().setProperty(jsiRuntime, "getCurrentOrientation", move(getCurrentOrientation));
 
     auto lockToLandscape = Function::createFromHostFunction(jsiRuntime,
-                                                          PropNameID::forAscii(jsiRuntime,
-                                                                               "lockToLandscape"),
-                                                          0,
-                                                          [](Runtime &runtime,
-                                                             const Value &thisValue,
-                                                             const Value *arguments,
-                                                             size_t count) -> Value {
+                                                            PropNameID::forAscii(jsiRuntime,
+                                                                                 "lockToLandscape"),
+                                                            0,
+                                                            [](Runtime &runtime,
+                                                               const Value &thisValue,
+                                                               const Value *arguments,
+                                                               size_t count) -> Value
+                                                            {
+                                                                JNIEnv *jniEnv = GetJniEnv();
 
-                                                              JNIEnv *jniEnv = GetJniEnv();
-
-                                                              java_class = jniEnv->GetObjectClass(
-                                                                      java_object);
-                                                              jmethodID lockToLandscape = jniEnv->GetMethodID(
-                                                                      java_class, "lockToLandscape",
-                                                                      "()V");
-                                                              jniEnv->CallVoidMethod(
-                                                                      java_object, lockToLandscape);
-                                                              return Value::undefined();
-                                                          });
+                                                                java_class = jniEnv->GetObjectClass(
+                                                                    java_object);
+                                                                jmethodID lockToLandscape = jniEnv->GetMethodID(
+                                                                    java_class, "lockToLandscape",
+                                                                    "()V");
+                                                                jniEnv->CallVoidMethod(
+                                                                    java_object, lockToLandscape);
+                                                                return Value::undefined();
+                                                            });
 
     jsiRuntime.global().setProperty(jsiRuntime, "lockToLandscape", move(lockToLandscape));
 
     auto lockToLandscapeLeft = Function::createFromHostFunction(jsiRuntime,
-                                                          PropNameID::forAscii(jsiRuntime,
-                                                                               "lockToLandscapeLeft"),
-                                                          0,
-                                                          [](Runtime &runtime,
-                                                             const Value &thisValue,
-                                                             const Value *arguments,
-                                                             size_t count) -> Value {
+                                                                PropNameID::forAscii(jsiRuntime,
+                                                                                     "lockToLandscapeLeft"),
+                                                                0,
+                                                                [](Runtime &runtime,
+                                                                   const Value &thisValue,
+                                                                   const Value *arguments,
+                                                                   size_t count) -> Value
+                                                                {
+                                                                    JNIEnv *jniEnv = GetJniEnv();
 
-                                                              JNIEnv *jniEnv = GetJniEnv();
-
-                                                              java_class = jniEnv->GetObjectClass(
-                                                                      java_object);
-                                                              jmethodID lockToLandscapeLeft = jniEnv->GetMethodID(
-                                                                      java_class, "lockToLandscapeLeft",
-                                                                      "()V");
-                                                              jniEnv->CallVoidMethod(
-                                                                      java_object, lockToLandscapeLeft);
-                                                              return Value::undefined();
-                                                          });
+                                                                    java_class = jniEnv->GetObjectClass(
+                                                                        java_object);
+                                                                    jmethodID lockToLandscapeLeft = jniEnv->GetMethodID(
+                                                                        java_class, "lockToLandscapeLeft",
+                                                                        "()V");
+                                                                    jniEnv->CallVoidMethod(
+                                                                        java_object, lockToLandscapeLeft);
+                                                                    return Value::undefined();
+                                                                });
 
     jsiRuntime.global().setProperty(jsiRuntime, "lockToLandscapeLeft", move(lockToLandscapeLeft));
 
     auto lockToLandscapeRight = Function::createFromHostFunction(jsiRuntime,
-                                                          PropNameID::forAscii(jsiRuntime,
-                                                                               "lockToLandscapeRight"),
-                                                          0,
-                                                          [](Runtime &runtime,
-                                                             const Value &thisValue,
-                                                             const Value *arguments,
-                                                             size_t count) -> Value {
+                                                                 PropNameID::forAscii(jsiRuntime,
+                                                                                      "lockToLandscapeRight"),
+                                                                 0,
+                                                                 [](Runtime &runtime,
+                                                                    const Value &thisValue,
+                                                                    const Value *arguments,
+                                                                    size_t count) -> Value
+                                                                 {
+                                                                     JNIEnv *jniEnv = GetJniEnv();
 
-                                                              JNIEnv *jniEnv = GetJniEnv();
-
-                                                              java_class = jniEnv->GetObjectClass(
-                                                                      java_object);
-                                                              jmethodID lockToLandscapeRight = jniEnv->GetMethodID(
-                                                                      java_class, "lockToLandscapeRight",
-                                                                      "()V");
-                                                              jniEnv->CallVoidMethod(
-                                                                      java_object, lockToLandscapeRight);
-                                                              return Value::undefined();
-                                                          });
+                                                                     java_class = jniEnv->GetObjectClass(
+                                                                         java_object);
+                                                                     jmethodID lockToLandscapeRight = jniEnv->GetMethodID(
+                                                                         java_class, "lockToLandscapeRight",
+                                                                         "()V");
+                                                                     jniEnv->CallVoidMethod(
+                                                                         java_object, lockToLandscapeRight);
+                                                                     return Value::undefined();
+                                                                 });
 
     jsiRuntime.global().setProperty(jsiRuntime, "lockToLandscapeRight", move(lockToLandscapeRight));
 
     auto lockToPortrait = Function::createFromHostFunction(jsiRuntime,
-                                                          PropNameID::forAscii(jsiRuntime,
-                                                                               "lockToPortrait"),
-                                                          0,
-                                                          [](Runtime &runtime,
-                                                             const Value &thisValue,
-                                                             const Value *arguments,
-                                                             size_t count) -> Value {
+                                                           PropNameID::forAscii(jsiRuntime,
+                                                                                "lockToPortrait"),
+                                                           0,
+                                                           [](Runtime &runtime,
+                                                              const Value &thisValue,
+                                                              const Value *arguments,
+                                                              size_t count) -> Value
+                                                           {
+                                                               JNIEnv *jniEnv = GetJniEnv();
 
-                                                              JNIEnv *jniEnv = GetJniEnv();
-
-                                                              java_class = jniEnv->GetObjectClass(
-                                                                      java_object);
-                                                              jmethodID lockToPortrait = jniEnv->GetMethodID(
-                                                                      java_class, "lockToPortrait",
-                                                                      "()V");
-                                                              jniEnv->CallVoidMethod(
-                                                                      java_object, lockToPortrait);
-                                                              return Value();
-                                                          });
+                                                               java_class = jniEnv->GetObjectClass(
+                                                                   java_object);
+                                                               jmethodID lockToPortrait = jniEnv->GetMethodID(
+                                                                   java_class, "lockToPortrait",
+                                                                   "()V");
+                                                               jniEnv->CallVoidMethod(
+                                                                   java_object, lockToPortrait);
+                                                               return Value();
+                                                           });
 
     jsiRuntime.global().setProperty(jsiRuntime, "lockToPortrait", move(lockToPortrait));
-    
+
     auto lockToPortraitUpsideDown = Function::createFromHostFunction(jsiRuntime,
-                                                          PropNameID::forAscii(jsiRuntime,
-                                                                               "lockToPortraitUpsideDown"),
-                                                          0,
-                                                          [](Runtime &runtime,
-                                                             const Value &thisValue,
-                                                             const Value *arguments,
-                                                             size_t count) -> Value {
+                                                                     PropNameID::forAscii(jsiRuntime,
+                                                                                          "lockToPortraitUpsideDown"),
+                                                                     0,
+                                                                     [](Runtime &runtime,
+                                                                        const Value &thisValue,
+                                                                        const Value *arguments,
+                                                                        size_t count) -> Value
+                                                                     {
+                                                                         JNIEnv *jniEnv = GetJniEnv();
 
-                                                              JNIEnv *jniEnv = GetJniEnv();
-
-                                                              java_class = jniEnv->GetObjectClass(
-                                                                      java_object);
-                                                              jmethodID lockToPortraitUpsideDown = jniEnv->GetMethodID(
-                                                                      java_class, "lockToPortraitUpsideDown",
-                                                                      "()V");
-                                                              jniEnv->CallVoidMethod(
-                                                                      java_object, lockToPortraitUpsideDown);
-                                                              return Value();
-                                                          });
+                                                                         java_class = jniEnv->GetObjectClass(
+                                                                             java_object);
+                                                                         jmethodID lockToPortraitUpsideDown = jniEnv->GetMethodID(
+                                                                             java_class, "lockToPortraitUpsideDown",
+                                                                             "()V");
+                                                                         jniEnv->CallVoidMethod(
+                                                                             java_object, lockToPortraitUpsideDown);
+                                                                         return Value();
+                                                                     });
 
     jsiRuntime.global().setProperty(jsiRuntime, "lockToPortraitUpsideDown", move(lockToPortraitUpsideDown));
 
     auto listenToOrientationChanges = Function::createFromHostFunction(jsiRuntime,
-                                                          PropNameID::forAscii(jsiRuntime,
-                                                                               "listenToOrientationChanges"),
-                                                          1,
-                                                          [](Runtime &runtime,
-                                                             const Value &thisValue,
-                                                             const Value *arguments,
-                                                             size_t count) -> Value {
+                                                                       PropNameID::forAscii(jsiRuntime,
+                                                                                            "listenToOrientationChanges"),
+                                                                       1,
+                                                                       [](Runtime &runtime,
+                                                                          const Value &thisValue,
+                                                                          const Value *arguments,
+                                                                          size_t count) -> Value
+                                                                       {
+                                                                           __android_log_write(ANDROID_LOG_INFO, "COCO TAG", "IN listenToOrientationChanges from C++");
 
+                                                                           auto callback = arguments[0].asObject(runtime).asFunction(runtime);
+                                                                           auto jsCallback = std::make_shared<jsi::Function>(std::move(callback));
+                                                                           jsCallbacks.push_back(jsCallback);
 
-                                                              __android_log_write(ANDROID_LOG_INFO, "COCO TAG", "IN listenToOrientationChanges from C++");
+                                                                           JNIEnv *jniEnv = GetJniEnv();
 
-                                                              auto callback = arguments[0].asObject(runtime).asFunction(runtime);
-                                                              auto jsCallback = std::make_shared<jsi::Function>(std::move(callback));
-                                                              jsCallbacks.push_back(jsCallback);
+                                                                           java_class = jniEnv->GetObjectClass(
+                                                                               java_object);
+                                                                           jmethodID listenToOrientationChanges = jniEnv->GetMethodID(
+                                                                               java_class, "listenToOrientationChanges",
+                                                                               "()V");
+                                                                           jniEnv->CallVoidMethod(
+                                                                               java_object, listenToOrientationChanges);
 
-                                                              JNIEnv *jniEnv = GetJniEnv();
+                                                                           auto close = [jsCallback](jsi::Runtime &runtime, const jsi::Value &, const jsi::Value *, size_t) -> jsi::Value
+                                                                           {
+                                                                               auto it = std::find(jsCallbacks.begin(), jsCallbacks.end(), jsCallback);
 
-                                                              java_class = jniEnv->GetObjectClass(
-                                                                      java_object);
-                                                              jmethodID listenToOrientationChanges = jniEnv->GetMethodID(
-                                                                      java_class, "listenToOrientationChanges",
-                                                                      "()V");
-                                                              jniEnv->CallVoidMethod(
-                                                                      java_object, listenToOrientationChanges);
+                                                                               // If element was found
+                                                                               if (it != jsCallbacks.end())
+                                                                               {
+                                                                                   __android_log_write(ANDROID_LOG_INFO, "COCO TAG", "FOUND CALLBACK %i");
+                                                                                   auto index = it - jsCallbacks.begin();
+                                                                                   jsCallbacks.erase(jsCallbacks.begin() + index);
+                                                                               }
+                                                                               else
+                                                                               {
+                                                                                   __android_log_write(ANDROID_LOG_INFO, "COCO TAG", "CALLBACK NOT FOUND");
+                                                                               }
 
-                                                              auto close = [jsCallback] (jsi::Runtime& runtime, const jsi::Value&, const jsi::Value*, size_t) -> jsi::Value {
-
-                                                                   auto it = std::find(jsCallbacks.begin(), jsCallbacks.end(), jsCallback);
-
-                                                                     // If element was found
-                                                                     if (it != jsCallbacks.end())
-                                                                     {
-                                                                         __android_log_write(ANDROID_LOG_INFO, "COCO TAG", "FOUND CALLBACK %i");
-                                                                         auto index = it - jsCallbacks.begin();
-                                                                         jsCallbacks.erase(jsCallbacks.begin()+index);
-                                                                     }else {
-                                                                         __android_log_write(ANDROID_LOG_INFO, "COCO TAG", "CALLBACK NOT FOUND");
-                                                                     }
-
-
-
-                                                                  return jsi::Value::undefined();
-                                                              };
-                                                              return jsi::Function::createFromHostFunction(runtime, jsi::PropNameID::forUtf8(runtime, "close"), 0, close);
-                                                          });
+                                                                               return jsi::Value::undefined();
+                                                                           };
+                                                                           return jsi::Function::createFromHostFunction(runtime, jsi::PropNameID::forUtf8(runtime, "close"), 0, close);
+                                                                       });
 
     jsiRuntime.global().setProperty(jsiRuntime, "listenToOrientationChanges", move(listenToOrientationChanges));
 
@@ -349,22 +357,23 @@ void install(facebook::jsi::Runtime &jsiRuntime, std::shared_ptr<react::CallInvo
                                                     [](Runtime &runtime,
                                                        const Value &thisValue,
                                                        const Value *arguments,
-                                                       size_t count) -> Value {
-
+                                                       size_t count) -> Value
+                                                    {
                                                         string key = arguments[0].getString(
-                                                                runtime).utf8(runtime);
+                                                                                     runtime)
+                                                                         .utf8(runtime);
                                                         string value = arguments[1].getString(
-                                                                runtime).utf8(runtime);
+                                                                                       runtime)
+                                                                           .utf8(runtime);
 
                                                         JNIEnv *jniEnv = GetJniEnv();
 
                                                         java_class = jniEnv->GetObjectClass(
-                                                                java_object);
-
+                                                            java_object);
 
                                                         jmethodID set = jniEnv->GetMethodID(
-                                                                java_class, "setItem",
-                                                                "(Ljava/lang/String;Ljava/lang/String;)V");
+                                                            java_class, "setItem",
+                                                            "(Ljava/lang/String;Ljava/lang/String;)V");
 
                                                         jstring jstr1 = string2jstring(jniEnv,
                                                                                        key);
@@ -375,14 +384,12 @@ void install(facebook::jsi::Runtime &jsiRuntime, std::shared_ptr<react::CallInvo
                                                         params[1].l = jstr2;
 
                                                         jniEnv->CallVoidMethodA(
-                                                                java_object, set, params);
+                                                            java_object, set, params);
 
                                                         return Value(true);
-
                                                     });
 
     jsiRuntime.global().setProperty(jsiRuntime, "setItem", move(setItem));
-
 
     auto getItem = Function::createFromHostFunction(jsiRuntime,
                                                     PropNameID::forAscii(jsiRuntime,
@@ -391,20 +398,20 @@ void install(facebook::jsi::Runtime &jsiRuntime, std::shared_ptr<react::CallInvo
                                                     [](Runtime &runtime,
                                                        const Value &thisValue,
                                                        const Value *arguments,
-                                                       size_t count) -> Value {
-
+                                                       size_t count) -> Value
+                                                    {
                                                         string key = arguments[0].getString(
-                                                                        runtime)
-                                                                .utf8(
-                                                                        runtime);
+                                                                                     runtime)
+                                                                         .utf8(
+                                                                             runtime);
 
                                                         JNIEnv *jniEnv = GetJniEnv();
 
                                                         java_class = jniEnv->GetObjectClass(
-                                                                java_object);
+                                                            java_object);
                                                         jmethodID get = jniEnv->GetMethodID(
-                                                                java_class, "getItem",
-                                                                "(Ljava/lang/String;)Ljava/lang/String;");
+                                                            java_class, "getItem",
+                                                            "(Ljava/lang/String;)Ljava/lang/String;");
 
                                                         jstring jstr1 = string2jstring(jniEnv,
                                                                                        key);
@@ -412,32 +419,31 @@ void install(facebook::jsi::Runtime &jsiRuntime, std::shared_ptr<react::CallInvo
                                                         params[0].l = jstr1;
 
                                                         jobject result = jniEnv->CallObjectMethodA(
-                                                                java_object, get, params);
+                                                            java_object, get, params);
                                                         const char *str = jniEnv->GetStringUTFChars(
-                                                                (jstring) result, NULL);
+                                                            (jstring)result, NULL);
 
                                                         return Value(runtime,
                                                                      String::createFromUtf8(
-                                                                             runtime, str));
-
+                                                                         runtime, str));
                                                     });
 
     jsiRuntime.global().setProperty(jsiRuntime, "getItem", move(getItem));
-
 }
 
-extern "C"
-JNIEXPORT void JNICALL
+extern "C" JNIEXPORT void JNICALL
 Java_com_tatchi_jsi_orientationlocker_JsiOrientationLockerModule_nativeInstall(JNIEnv *env, jobject thiz,
-                               jlong jsiRuntimePtr,
-                               jobject boxedCallInvokerHolder) {
+                                                                               jlong jsiRuntimePtr,
+                                                                               jobject boxedCallInvokerHolder)
+{
 
     auto jsiRuntime = reinterpret_cast<jsi::Runtime *>(jsiRuntimePtr);
 
     auto boxedCallInvokerRef = jni::make_local(boxedCallInvokerHolder);
     auto callInvokerHolder = jni::dynamic_ref_cast<react::CallInvokerHolder::javaobject>(boxedCallInvokerRef);
     auto jsCallInvoker = callInvokerHolder->cthis()->getCallInvoker();
-    if (jsiRuntime) {
+    if (jsiRuntime)
+    {
         install(*jsiRuntime, jsCallInvoker);
     }
     // TODO: needed?
@@ -445,7 +451,7 @@ Java_com_tatchi_jsi_orientationlocker_JsiOrientationLockerModule_nativeInstall(J
     java_object = env->NewGlobalRef(thiz);
 }
 
-JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *) {
-    return facebook::jni::initialize(vm, [] {
-    });
+JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *)
+{
+    return facebook::jni::initialize(vm, [] {});
 }
