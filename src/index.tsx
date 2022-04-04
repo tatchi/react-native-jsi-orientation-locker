@@ -7,7 +7,7 @@ declare global {
   var lockToLandscapeRight: () => void;
   var lockToPortrait: () => void;
   var lockToPortraitUpsideDown: () => void;
-  var activateListener: (cb: (orientation: number) => void) => () => void;
+  var listenToOrientationChanges: (cb: (orientation: number) => void) => () => void;
 }
 
 const OrientationNativeModule = NativeModules.JsiOrientationLocker;
@@ -51,7 +51,7 @@ export const lockToPortraitUpsideDown = (): void => {
 export const listenToOrientationChanges = (
   cb: (orientation: number) => void
 ): (() => void) => {
-  return global.activateListener(cb);
+  return global.listenToOrientationChanges(cb);
 };
 
 const orientationModuleAndroid = {

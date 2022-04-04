@@ -293,9 +293,9 @@ void install(facebook::jsi::Runtime &jsiRuntime, std::shared_ptr<react::CallInvo
 
     jsiRuntime.global().setProperty(jsiRuntime, "lockToPortraitUpsideDown", move(lockToPortraitUpsideDown));
 
-    auto activateListener = Function::createFromHostFunction(jsiRuntime,
+    auto listenToOrientationChanges = Function::createFromHostFunction(jsiRuntime,
                                                           PropNameID::forAscii(jsiRuntime,
-                                                                               "activateListener"),
+                                                                               "listenToOrientationChanges"),
                                                           1,
                                                           [](Runtime &runtime,
                                                              const Value &thisValue,
@@ -303,7 +303,7 @@ void install(facebook::jsi::Runtime &jsiRuntime, std::shared_ptr<react::CallInvo
                                                              size_t count) -> Value {
 
 
-                                                              __android_log_write(ANDROID_LOG_INFO, "COCO TAG", "IN activateListener from C++");
+                                                              __android_log_write(ANDROID_LOG_INFO, "COCO TAG", "IN listenToOrientationChanges from C++");
 
                                                               auto callback = arguments[0].asObject(runtime).asFunction(runtime);
                                                               auto jsCallback = std::make_shared<jsi::Function>(std::move(callback));
@@ -313,11 +313,11 @@ void install(facebook::jsi::Runtime &jsiRuntime, std::shared_ptr<react::CallInvo
 
                                                               java_class = jniEnv->GetObjectClass(
                                                                       java_object);
-                                                              jmethodID activateListener = jniEnv->GetMethodID(
-                                                                      java_class, "activateListener",
+                                                              jmethodID listenToOrientationChanges = jniEnv->GetMethodID(
+                                                                      java_class, "listenToOrientationChanges",
                                                                       "()V");
                                                               jniEnv->CallVoidMethod(
-                                                                      java_object, activateListener);
+                                                                      java_object, listenToOrientationChanges);
 
                                                               auto close = [jsCallback] (jsi::Runtime& runtime, const jsi::Value&, const jsi::Value*, size_t) -> jsi::Value {
 
@@ -340,7 +340,7 @@ void install(facebook::jsi::Runtime &jsiRuntime, std::shared_ptr<react::CallInvo
                                                               return jsi::Function::createFromHostFunction(runtime, jsi::PropNameID::forUtf8(runtime, "close"), 0, close);
                                                           });
 
-    jsiRuntime.global().setProperty(jsiRuntime, "activateListener", move(activateListener));
+    jsiRuntime.global().setProperty(jsiRuntime, "listenToOrientationChanges", move(listenToOrientationChanges));
 
     auto setItem = Function::createFromHostFunction(jsiRuntime,
                                                     PropNameID::forAscii(jsiRuntime,

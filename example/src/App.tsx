@@ -21,6 +21,10 @@ export default function App() {
     unregister2.current = Orientation.listenToOrientationChanges(res => {
       console.log({second: res});
     });
+    return () => {
+      unregister1.current && unregister1.current();
+      unregister2.current && unregister2.current();
+    };
   }, []);
 
   return (

@@ -67,7 +67,7 @@ public class JsiOrientationLockerModule extends ReactContextBaseJavaModule {
     }
 
   }
-  public void activateListener() {
+  public void listenToOrientationChanges() {
     mOrientationListener = new OrientationEventListener(this.getReactApplicationContext(), SensorManager.SENSOR_DELAY_UI) {
 
       @Override
