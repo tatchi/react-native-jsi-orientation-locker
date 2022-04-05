@@ -10,6 +10,8 @@
 
 #include <jsi/jsilib.h>
 
+#include "JOrientationLocker.h"
+
 using namespace std;
 using namespace facebook;
 using namespace facebook::jsi;
@@ -106,8 +108,9 @@ std::shared_ptr<react::CallInvoker> invoker;
 
 jsi::Runtime *rt;
 
+// TODO: use makeNativeMethod ? https://github.dev/ospfranco/react-native-quick-sqlite
 extern "C" JNIEXPORT int JNICALL
-Java_com_tatchi_jsi_orientationlocker_JsiOrientationLockerModule_callValue(JNIEnv *env, jclass clazz, jint param)
+Java_com_tatchi_jsi_orientationlocker_OrientationLocker_callValue(JNIEnv *env, jclass clazz, jint param)
 {
 
     __android_log_write(ANDROID_LOG_INFO, "COCO TAG", "callValue got called in C++");
@@ -124,7 +127,7 @@ Java_com_tatchi_jsi_orientationlocker_JsiOrientationLockerModule_callValue(JNIEn
     return result;
 }
 
-void install(facebook::jsi::Runtime &jsiRuntime, std::shared_ptr<react::CallInvoker> jsCallInvoker)
+void install(facebook::jsi::Runtime &jsiRuntime, std::shared_ptr<react::CallInvoker> jsCallInvoker, jni::global_ref<JOrientationLocker::javaobject> orientationLocker)
 {
     //  docPathStr = std::string(docPath);
     //   auto pool = std::make_shared<ThreadPool>();
@@ -163,26 +166,16 @@ void install(facebook::jsi::Runtime &jsiRuntime, std::shared_ptr<react::CallInvo
                                                                   PropNameID::forAscii(jsiRuntime,
                                                                                        "getCurrentOrientation"),
                                                                   0,
-                                                                  [](Runtime &runtime,
-                                                                     const Value &thisValue,
-                                                                     const Value *arguments,
-                                                                     size_t count) -> Value
+                                                                  [orientationLocker](Runtime &runtime,
+                                                                                      const Value &thisValue,
+                                                                                      const Value *arguments,
+                                                                                      size_t count) -> Value
                                                                   {
-                                                                      JNIEnv *jniEnv = GetJniEnv();
-
-                                                                      java_class = jniEnv->GetObjectClass(
-                                                                          java_object);
-                                                                      jmethodID getCurrentOrientation = jniEnv->GetMethodID(
-                                                                          java_class, "getCurrentOrientation",
-                                                                          "()Ljava/lang/String;");
-                                                                      jobject result = jniEnv->CallObjectMethod(
-                                                                          java_object, getCurrentOrientation);
-                                                                      const char *str = jniEnv->GetStringUTFChars(
-                                                                          (jstring)result, NULL);
+                                                                      auto orientation = orientationLocker->getCurrentOrientation();
 
                                                                       return Value(runtime,
                                                                                    String::createFromUtf8(
-                                                                                       runtime, str));
+                                                                                       runtime, orientation->toString()));
                                                                   });
 
     jsiRuntime.global().setProperty(jsiRuntime, "getCurrentOrientation", move(getCurrentOrientation));
@@ -191,20 +184,12 @@ void install(facebook::jsi::Runtime &jsiRuntime, std::shared_ptr<react::CallInvo
                                                             PropNameID::forAscii(jsiRuntime,
                                                                                  "lockToLandscape"),
                                                             0,
-                                                            [](Runtime &runtime,
-                                                               const Value &thisValue,
-                                                               const Value *arguments,
-                                                               size_t count) -> Value
+                                                            [orientationLocker](Runtime &runtime,
+                                                                                const Value &thisValue,
+                                                                                const Value *arguments,
+                                                                                size_t count) -> Value
                                                             {
-                                                                JNIEnv *jniEnv = GetJniEnv();
-
-                                                                java_class = jniEnv->GetObjectClass(
-                                                                    java_object);
-                                                                jmethodID lockToLandscape = jniEnv->GetMethodID(
-                                                                    java_class, "lockToLandscape",
-                                                                    "()V");
-                                                                jniEnv->CallVoidMethod(
-                                                                    java_object, lockToLandscape);
+                                                                orientationLocker->lockToLandscape();
                                                                 return Value::undefined();
                                                             });
 
@@ -432,8 +417,9 @@ void install(facebook::jsi::Runtime &jsiRuntime, std::shared_ptr<react::CallInvo
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_tatchi_jsi_orientationlocker_JsiOrientationLockerModule_nativeInstall(JNIEnv *env, jobject thiz,
-                                                                               jlong jsiRuntimePtr,
+Java_com_tatchi_jsi_orientationlocker_JsiOrientationLockerModule_nativeInstall(JNIEnv *env,
+                                                                               jobject type,
+                                                                               jobject boxedOrientationLocker, jlong jsiRuntimePtr,
                                                                                jobject boxedCallInvokerHolder)
 {
 
@@ -442,13 +428,17 @@ Java_com_tatchi_jsi_orientationlocker_JsiOrientationLockerModule_nativeInstall(J
     auto boxedCallInvokerRef = jni::make_local(boxedCallInvokerHolder);
     auto callInvokerHolder = jni::dynamic_ref_cast<react::CallInvokerHolder::javaobject>(boxedCallInvokerRef);
     auto jsCallInvoker = callInvokerHolder->cthis()->getCallInvoker();
+
+    auto boxedOrientationLockerRef = jni::make_global(boxedOrientationLocker);
+    auto orientationLocker = jni::dynamic_ref_cast<JOrientationLocker::javaobject>(boxedOrientationLockerRef);
+
     if (jsiRuntime)
     {
-        install(*jsiRuntime, jsCallInvoker);
+        install(*jsiRuntime, jsCallInvoker, orientationLocker);
     }
     // TODO: needed?
-    env->GetJavaVM(&java_vm);
-    java_object = env->NewGlobalRef(thiz);
+    // env->GetJavaVM(&java_vm);
+    // java_object = env->NewGlobalRef(thiz);
 }
 
 JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *)
