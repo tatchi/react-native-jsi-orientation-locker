@@ -17,6 +17,13 @@ void JOrientationLocker::lockToLandscape() const
   lockToLandscapeMethod(self());
 }
 
+void JOrientationLocker::listenToOrientationChanges() const
+{
+  auto listenToOrientationChangesMethod = getClass()->getMethod<void()>("listenToOrientationChanges");
+
+  listenToOrientationChangesMethod(self());
+}
+
 local_ref<jstring> JOrientationLocker::getCurrentOrientation() const
 {
   auto getCurrentOrientationMethod = getClass()->getMethod<jstring()>("getCurrentOrientation");

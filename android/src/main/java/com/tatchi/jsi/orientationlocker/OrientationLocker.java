@@ -37,18 +37,17 @@ public class OrientationLocker extends ReactContextBaseJavaModule {
     return "OrientationLocker";
   }
 
-  public static native int callValue(int param);
+  // public static native int callValue(int param);
 
   public void listenToOrientationChanges() {
     mOrientationListener = new OrientationEventListener(this.getReactApplicationContext(), SensorManager.SENSOR_DELAY_UI) {
 
       @Override
       public void onOrientationChanged(int orientation) {
-
-
         Log.i("COCO onOrientation_CB","DeviceOrientation changed to " + orientation);
-        int result = callValue(orientation);
-        Log.i("onOrientation_CB","Result from C++ callValue" + result);
+        long jsContextPointer = getReactApplicationContext().getJavaScriptContextHolder().get();
+        JsiBridge.callValue();
+        Log.i("onOrientation_CB","Result from C++ callValue");
       }
 
     };

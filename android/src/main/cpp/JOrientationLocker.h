@@ -16,7 +16,9 @@ struct JOrientationLocker : public JavaClass<JOrientationLocker>
   static constexpr auto kJavaDescriptor = "Lcom/tatchi/jsi/orientationlocker/OrientationLocker;";
 
 public:
-    void lockToLandscape() const;
+  void lockToLandscape() const;
+
+  void listenToOrientationChanges() const;
 
   local_ref<jstring> getCurrentOrientation() const;
 };

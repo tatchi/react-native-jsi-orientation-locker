@@ -24,7 +24,6 @@ import com.facebook.react.bridge.ReactMethod;
 
 import com.facebook.react.turbomodule.core.CallInvokerHolderImpl;
 
-
 @ReactModule(name = JsiOrientationLockerModule.NAME)
 public class JsiOrientationLockerModule extends ReactContextBaseJavaModule {
   public static final String NAME = "JsiOrientationLocker";
@@ -39,30 +38,14 @@ public class JsiOrientationLockerModule extends ReactContextBaseJavaModule {
     return NAME;
   }
 
-  private native void nativeInstall(OrientationLocker orientationLocker, long jsContextNativePointer, CallInvokerHolderImpl jsCallInvokerHolder);
-
-  // Installing JSI Bindings as done by
-// https://github.com/mrousavy/react-native-mmkv
   @ReactMethod(isBlockingSynchronousMethod = true)
-  public boolean install() {
-
-    System.loadLibrary("react-native-jsi-orientation-locker");
-    ReactApplicationContext context = getReactApplicationContext();
-    JavaScriptContextHolder jsContext = context.getJavaScriptContextHolder();
-    CallInvokerHolderImpl jsCallInvokerHolder = (CallInvokerHolderImpl)context.getCatalystInstance().getJSCallInvokerHolder();
-    OrientationLocker orientationLocker = new OrientationLocker(context);
-
-    if (jsContext != null) {
-      this.nativeInstall(
-        orientationLocker,
-        jsContext.get(),
-        jsCallInvokerHolder
-      );
-      return true;
-    } else {
-      Log.e("OrientationModule", "JSI Runtime is not available in debug mode");
-      return false;
+  public void install() {
+    try {
+      System.loadLibrary("react-native-jsi-orientation-locker");
+      Log.i(NAME, "IN INSTALL JSI BINDINGS SHOULD BE CALLED ONCE");
+      JsiBridge.instance.install(getReactApplicationContext());
+    } catch (Exception exception) {
+      Log.e(NAME, "Failed to install JSI Bindings!", exception);
     }
-
   }
 }
