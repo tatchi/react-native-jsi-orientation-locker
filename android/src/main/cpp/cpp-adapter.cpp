@@ -18,18 +18,12 @@ struct JsiBridge : JavaClass<JsiBridge>
     static void registerNatives()
     {
         javaClassStatic()->registerNatives({// initialization for JSI
-                                            makeNativeMethod("installNativeJsi", JsiBridge::installNativeJsi),
-                                            makeNativeMethod("callValue", JsiBridge::callValue)
+                                            makeNativeMethod("installNativeJsi", JsiBridge::installNativeJsi)
 
         });
     }
 
 private:
-    static void callValue(jni::alias_ref<jni::JClass> clazz)
-    {
-        __android_log_write(ANDROID_LOG_INFO, "COCO TAG", "IN callValue");
-    }
-
     static void installNativeJsi(jni::alias_ref<jni::JObject> thiz,
                                  jlong jsiRuntimePtr,
                                  jni::alias_ref<react::CallInvokerHolder::javaobject> jsCallInvokerHolder,
@@ -48,7 +42,7 @@ private:
         install(*jsiRuntime, jsCallInvoker, boxedOrientationLockerRef);
     }
 
-    static void install(jsi::Runtime &jsiRuntime, std::shared_ptr<react::CallInvoker> jsCallInvoker, jni::global_ref<JOrientationLocker::javaobject> orientationLocker)
+    static void install(jsi::Runtime &jsiRuntime, std::shared_ptr<react::CallInvoker> jsCallInvoker,  jni::global_ref<JOrientationLocker::javaobject> orientationLocker)
     {
 
         auto getCurrentOrientation = Function::createFromHostFunction(jsiRuntime,
@@ -60,7 +54,7 @@ private:
                                                                                           const Value *arguments,
                                                                                           size_t count) -> Value
                                                                       {
-                                                                          auto orientation = orientationLocker->getCurrentOrientation();
+                                                                          auto orientation = orientationLocker->cthis()->getCurrentOrientation();
 
                                                                           return Value(runtime,
                                                                                        String::createFromUtf8(
@@ -80,7 +74,12 @@ private:
                                                                            {
                                                                                __android_log_write(ANDROID_LOG_INFO, "COCO TAG", "IN listenToOrientationChanges from C++");
 
-                                                                               orientationLocker->listenToOrientationChanges();
+
+                                                                               auto callback = arguments[0].asObject(runtime).asFunction(runtime);
+                                                                               auto jsCallback = std::make_shared<jsi::Function>(std::move(callback));
+
+
+                                                                               orientationLocker->cthis()->listenToOrientationChanges(jsCallback);
 
                                                                                return jsi::Value::undefined();
                                                                            });
@@ -92,6 +91,6 @@ private:
 JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *)
 {
     return jni::initialize(vm, []
-                           { JsiBridge::registerNatives(); });
+                           { JsiBridge::registerNatives();
+                                JOrientationLocker::registerNatives(); });
 }
-

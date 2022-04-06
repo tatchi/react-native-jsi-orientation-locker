@@ -12,6 +12,8 @@ import android.view.Display;
 import android.view.OrientationEventListener;
 import android.view.Surface;
 import android.view.WindowManager;
+import com.facebook.jni.HybridData;
+import com.facebook.proguard.annotations.DoNotStrip;
 
 import androidx.annotation.NonNull;
 
@@ -22,13 +24,26 @@ import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.module.annotations.ReactModule;
 
 import com.facebook.react.turbomodule.core.CallInvokerHolderImpl;
+import com.facebook.react.turbomodule.core.interfaces.CallInvokerHolder;
 
 
 public class OrientationLocker extends ReactContextBaseJavaModule {
+  @DoNotStrip
+  @SuppressWarnings("unused")
+  private HybridData mHybridData;
+
   private OrientationEventListener mOrientationListener;
+
+  private native HybridData initHybrid(long jsContext, CallInvokerHolderImpl jsCallInvokerHolder);
+
+  public native void callValue(int value);
+
 
   public OrientationLocker(ReactApplicationContext reactContext) {
     super(reactContext);
+    JavaScriptContextHolder jsContext = reactContext.getJavaScriptContextHolder();
+    CallInvokerHolder jsCallInvokerHolder = reactContext.getCatalystInstance().getJSCallInvokerHolder();
+    mHybridData = initHybrid(jsContext.get(), (CallInvokerHolderImpl)jsCallInvokerHolder);
   }
 
   @Override
@@ -37,8 +52,6 @@ public class OrientationLocker extends ReactContextBaseJavaModule {
     return "OrientationLocker";
   }
 
-  // public static native int callValue(int param);
-
   public void listenToOrientationChanges() {
     mOrientationListener = new OrientationEventListener(this.getReactApplicationContext(), SensorManager.SENSOR_DELAY_UI) {
 
@@ -46,7 +59,7 @@ public class OrientationLocker extends ReactContextBaseJavaModule {
       public void onOrientationChanged(int orientation) {
         Log.i("COCO onOrientation_CB","DeviceOrientation changed to " + orientation);
         long jsContextPointer = getReactApplicationContext().getJavaScriptContextHolder().get();
-        JsiBridge.callValue();
+        callValue(orientation);
         Log.i("onOrientation_CB","Result from C++ callValue");
       }
 

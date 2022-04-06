@@ -10,8 +10,6 @@ public class JsiBridge {
   private native void installNativeJsi(long jsContextNativePointer,
       CallInvokerHolderImpl jsCallInvokerHolder, OrientationLocker orientationLocker);
 
-  public static native void callValue();
-
   public static final JsiBridge instance = new JsiBridge();
 
   public void install(ReactApplicationContext context) {

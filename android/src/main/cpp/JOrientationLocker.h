@@ -5,20 +5,43 @@
 #pragma once
 
 #include <jni.h>
+#include <ReactCommon/CallInvokerHolder.h>
 #include <fbjni/fbjni.h>
+#include <jsi/jsi.h>
 #include <string>
 
 using namespace facebook;
 using namespace jni;
 
-struct JOrientationLocker : public JavaClass<JOrientationLocker>
+class JOrientationLocker : public jni::HybridClass<JOrientationLocker>
 {
+public:
   static constexpr auto kJavaDescriptor = "Lcom/tatchi/jsi/orientationlocker/OrientationLocker;";
 
-public:
-  void lockToLandscape() const;
+  static jni::local_ref<jhybriddata> initHybrid(
+      jni::alias_ref<jhybridobject> jThis,
+      jlong jsContext,
+      jni::alias_ref<react::CallInvokerHolder::javaobject> jsCallInvokerHolder);
 
-  void listenToOrientationChanges() const;
+  static void registerNatives();
 
-  local_ref<jstring> getCurrentOrientation() const;
+  // void lockToLandscape();
+
+  void listenToOrientationChanges(std::shared_ptr<jsi::Function> onChange);
+
+  local_ref<jstring> getCurrentOrientation();
+
+  void callValue(int value);
+
+private:
+  friend HybridBase;
+  jni::global_ref<JOrientationLocker::javaobject> javaPart_;
+  jsi::Runtime *runtime_;
+  std::shared_ptr<react::CallInvoker> jsCallInvoker_;
+  std::vector<std::shared_ptr<facebook::jsi::Function>> jsCallbacks_;
+
+  explicit JOrientationLocker(
+      jni::alias_ref<JOrientationLocker::jhybridobject> jThis,
+      jsi::Runtime *rt,
+      std::shared_ptr<react::CallInvoker> jsCallInvoker);
 };

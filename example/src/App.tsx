@@ -11,7 +11,9 @@ export default function App() {
     <View style={styles.container}>
       <TouchableOpacity
         onPress={() => {
-          Orientation.listenToOrientationChanges()
+          Orientation.listenToOrientationChanges(orientation => {
+            console.log(`got orientation: ${orientation}`);
+          })
           let value = Orientation.getCurrentOrientation();
           setOrientation(value);
         }}
