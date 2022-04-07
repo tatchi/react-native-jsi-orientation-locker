@@ -36,8 +36,8 @@ void JOrientationLocker::registerNatives()
   registerHybrid({
       makeNativeMethod("initHybrid",
                        JOrientationLocker::initHybrid),
-      makeNativeMethod("callValue",
-                       JOrientationLocker::callValue),
+      makeNativeMethod("onOrientationChangedCallback",
+                       JOrientationLocker::onOrientationChangedCallback),
   });
 }
 
@@ -48,12 +48,12 @@ local_ref<jstring> JOrientationLocker::getCurrentOrientation()
   return getCurrentOrientationMethod(javaPart_.get());
 }
 
-void JOrientationLocker::callValue(int value)
+void JOrientationLocker::onOrientationChangedCallback(int value)
 {
   __android_log_print(ANDROID_LOG_INFO, "COCO TAG", "IN callValue %d", value);
 
   jsCallInvoker_->invokeAsync([=]()
-                       {
+                              {
             __android_log_print(ANDROID_LOG_INFO, "COCO TAG", "in invoke async, nb: %d", jsCallbacks_.size());
             for(auto & elem : jsCallbacks_)
             {
@@ -61,12 +61,59 @@ void JOrientationLocker::callValue(int value)
             } });
 }
 
-// void JOrientationLocker::lockToLandscape() const
-// {
-//   auto lockToLandscapeMethod = getClass()->getMethod<void()>("lockToLandscape");
+void JOrientationLocker::lockToLandscape()
+{
+  auto lockToLandscapeMethod = javaPart_->getClass()->getMethod<void()>("lockToLandscape");
 
-//   lockToLandscapeMethod(self());
-// }
+  lockToLandscapeMethod(javaPart_.get());
+}
+
+void JOrientationLocker::lockToLandscapeLeft()
+{
+  auto lockToLandscapeMethod = javaPart_->getClass()->getMethod<void()>("lockToLandscapeLeft");
+
+  lockToLandscapeMethod(javaPart_.get());
+}
+
+void JOrientationLocker::lockToLandscapeRight()
+{
+  auto lockToLandscapeMethod = javaPart_->getClass()->getMethod<void()>("lockToLandscapeRight");
+
+  lockToLandscapeMethod(javaPart_.get());
+}
+
+void JOrientationLocker::lockToPortrait()
+{
+  auto lockToLandscapeMethod = javaPart_->getClass()->getMethod<void()>("lockToPortrait");
+
+  lockToLandscapeMethod(javaPart_.get());
+}
+
+
+void JOrientationLocker::lockToPortraitUpsideDown()
+{
+  auto lockToLandscapeMethod = javaPart_->getClass()->getMethod<void()>("lockToPortraitUpsideDown");
+
+  lockToLandscapeMethod(javaPart_.get());
+}
+
+void JOrientationLocker::removeCallback(std::shared_ptr<facebook::jsi::Function> cb)
+{
+    auto it = std::find(jsCallbacks_.begin(), jsCallbacks_.end(), cb);
+
+    // If element was found
+    if (it != jsCallbacks_.end())
+    {
+        __android_log_write(ANDROID_LOG_INFO, "COCO TAG", "FOUND CALLBACK %i");
+        auto index = it - jsCallbacks_.begin();
+        jsCallbacks_.erase(jsCallbacks_.begin() + index);
+    }
+    else
+    {
+        __android_log_write(ANDROID_LOG_INFO, "COCO TAG", "CALLBACK NOT FOUND");
+    }
+}
+
 
 void JOrientationLocker::listenToOrientationChanges(std::shared_ptr<jsi::Function> onChange)
 {
@@ -76,11 +123,7 @@ void JOrientationLocker::listenToOrientationChanges(std::shared_ptr<jsi::Functio
   auto listenToOrientationChangesMethod = javaPart_->getClass()->getMethod<void()>("listenToOrientationChanges");
 
   listenToOrientationChangesMethod(javaPart_.get());
+
+
+
 }
-
-// local_ref<jstring> JOrientationLocker::getCurrentOrientation() const
-// {
-//   auto getCurrentOrientationMethod = getClass()->getMethod<jstring()>("getCurrentOrientation");
-
-//   return getCurrentOrientationMethod(self());
-// }

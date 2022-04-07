@@ -42,7 +42,6 @@ public class JsiOrientationLockerModule extends ReactContextBaseJavaModule {
   public void install() {
     try {
       System.loadLibrary("react-native-jsi-orientation-locker");
-      Log.i(NAME, "IN INSTALL JSI BINDINGS SHOULD BE CALLED ONCE");
       JsiBridge.instance.install(getReactApplicationContext());
     } catch (Exception exception) {
       Log.e(NAME, "Failed to install JSI Bindings!", exception);

@@ -25,20 +25,26 @@ public:
 
   static void registerNatives();
 
-  // void lockToLandscape();
+  void lockToLandscape();
+  void lockToLandscapeLeft();
+  void lockToLandscapeRight();
+  void lockToPortrait();
+  void lockToPortraitUpsideDown();
 
   void listenToOrientationChanges(std::shared_ptr<jsi::Function> onChange);
 
   local_ref<jstring> getCurrentOrientation();
 
-  void callValue(int value);
+  void onOrientationChangedCallback(int value);
+
+  void removeCallback(std::shared_ptr<facebook::jsi::Function> cb);
 
 private:
   friend HybridBase;
   jni::global_ref<JOrientationLocker::javaobject> javaPart_;
   jsi::Runtime *runtime_;
   std::shared_ptr<react::CallInvoker> jsCallInvoker_;
-  std::vector<std::shared_ptr<facebook::jsi::Function>> jsCallbacks_;
+  std::vector<std::shared_ptr<facebook::jsi::Function> > jsCallbacks_;
 
   explicit JOrientationLocker(
       jni::alias_ref<JOrientationLocker::jhybridobject> jThis,

@@ -3,22 +3,99 @@ import {StyleSheet, View, Text, TouchableOpacity} from 'react-native';
 import Orientation from 'react-native-jsi-orientation-locker';
 
 export default function App() {
-  const [orientation, setOrientation] = React.useState(() =>
+  const [orientation, setOrientation] = React.useState<string>('');
+  const [currentOrientation, setCurrentOrientation] = React.useState(() =>
     Orientation.getCurrentOrientation(),
   );
 
+  const unregister1 = React.useRef<() => void>();
+  const unregister2 = React.useRef<() => void>();
+
+  React.useEffect(() => {
+    unregister1.current = Orientation.listenToOrientationChanges(
+      orientation => {
+        console.log({first: orientation});
+        setCurrentOrientation(orientation);
+      },
+    );
+    unregister2.current = Orientation.listenToOrientationChanges(res => {
+      console.log({second: res});
+    });
+    return () => {
+      unregister1.current && unregister1.current();
+      unregister2.current && unregister2.current();
+    };
+  }, []);
+
   return (
     <View style={styles.container}>
+      <Text>Current Orientation: {currentOrientation}</Text>
       <TouchableOpacity
         onPress={() => {
-          Orientation.listenToOrientationChanges(orientation => {
-            console.log(`got orientation: ${orientation}`);
-          })
           let value = Orientation.getCurrentOrientation();
           setOrientation(value);
         }}
         style={styles.button}>
         <Text style={styles.buttonTxt}>Orientation: {orientation}</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        onPress={() => {
+          Orientation.lockToPortrait();
+        }}
+        style={styles.button}>
+        <Text style={styles.buttonTxt}>Lock Portrait</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        onPress={() => {
+          Orientation.lockToPortraitUpsideDown();
+        }}
+        style={styles.button}>
+        <Text style={styles.buttonTxt}>Lock PortraitUpsideDown</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        onPress={() => {
+          Orientation.lockToLandscape();
+        }}
+        style={styles.button}>
+        <Text style={styles.buttonTxt}>Lock Landscape</Text>
+      </TouchableOpacity>
+
+      {/* <TouchableOpacity
+        onPress={() => {
+          Orientation.lockToLandscapeLeft();
+        }}
+        style={styles.button}>
+        <Text style={styles.buttonTxt}>Lock Landscape Left</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        onPress={() => {
+          Orientation.lockToLandscapeRight();
+        }}
+        style={styles.button}>
+        <Text style={styles.buttonTxt}>Lock Landscape Right</Text>
+      </TouchableOpacity> */}
+
+      <TouchableOpacity
+        onPress={() => {
+          if (unregister1.current) {
+            unregister1.current();
+          }
+        }}
+        style={styles.button}>
+        <Text style={styles.buttonTxt}>Unregister Listener 1</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        onPress={() => {
+          if (unregister2.current) {
+            unregister2.current();
+          }
+        }}
+        style={styles.button}>
+        <Text style={styles.buttonTxt}>Unregister Listener 2.</Text>
       </TouchableOpacity>
     </View>
   );

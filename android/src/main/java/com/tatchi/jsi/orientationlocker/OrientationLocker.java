@@ -36,7 +36,7 @@ public class OrientationLocker extends ReactContextBaseJavaModule {
 
   private native HybridData initHybrid(long jsContext, CallInvokerHolderImpl jsCallInvokerHolder);
 
-  public native void callValue(int value);
+  public native void onOrientationChangedCallback(int value);
 
 
   public OrientationLocker(ReactApplicationContext reactContext) {
@@ -59,7 +59,7 @@ public class OrientationLocker extends ReactContextBaseJavaModule {
       public void onOrientationChanged(int orientation) {
         Log.i("COCO onOrientation_CB","DeviceOrientation changed to " + orientation);
         long jsContextPointer = getReactApplicationContext().getJavaScriptContextHolder().get();
-        callValue(orientation);
+        onOrientationChangedCallback(orientation);
         Log.i("onOrientation_CB","Result from C++ callValue");
       }
 
