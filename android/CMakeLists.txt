@@ -25,6 +25,7 @@ add_library(
         ${PACKAGE_NAME}  # <-- Library name
         SHARED
         src/main/cpp/cpp-adapter.cpp
+        src/main/cpp/JOrientationLocker.cpp
 )
 
 set_target_properties(

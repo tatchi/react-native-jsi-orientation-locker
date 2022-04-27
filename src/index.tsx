@@ -7,13 +7,16 @@ declare global {
   var lockToLandscapeRight: () => void;
   var lockToPortrait: () => void;
   var lockToPortraitUpsideDown: () => void;
-  var listenToOrientationChanges: (cb: (orientation: number) => void) => () => void;
+  var listenToOrientationChanges: (
+    cb: (orientation: number) => void
+  ) => () => void;
 }
 
 const OrientationNativeModule = NativeModules.JsiOrientationLocker;
 
 if (OrientationNativeModule) {
   if (typeof OrientationNativeModule.install === 'function') {
+    console.log('INSTALLING THE MODULE');
     OrientationNativeModule.install();
   }
 }

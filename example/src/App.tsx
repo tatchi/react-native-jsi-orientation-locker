@@ -63,7 +63,7 @@ export default function App() {
         <Text style={styles.buttonTxt}>Lock Landscape</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity
+      {/* <TouchableOpacity
         onPress={() => {
           Orientation.lockToLandscapeLeft();
         }}
@@ -77,7 +77,7 @@ export default function App() {
         }}
         style={styles.button}>
         <Text style={styles.buttonTxt}>Lock Landscape Right</Text>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
 
       <TouchableOpacity
         onPress={() => {
